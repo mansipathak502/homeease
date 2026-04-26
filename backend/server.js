@@ -29,6 +29,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/vendors', require('./routes/vendorPublicRoutes'));
 app.use('/api/society-leads', societyLeadRoutes);
 app.use('/api/ai-recommend', require('./routes/aiRecommendRoutes'));
+
 app.use('/api/payment', paymentRoutes);
 // Health check route
 app.get('/api/health', (req, res) => {

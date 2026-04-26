@@ -11,6 +11,7 @@ import {
   FileText, Loader2, Navigation, ArrowUpRight,
 } from "lucide-react";
 import ServiceRecommendPopup from "@/components/ServiceRecommendPopup";
+import StablePopup from "@/components/StablePopup";
 
 const gp = (v, camel, snake, fallback = "") =>
   ((v?.[camel] || v?.[snake] || fallback) ?? "").toString();
@@ -162,9 +163,8 @@ export default function UserDashboard() {
 
   const handleLogout = () => { localStorage.clear(); router.push("/login"); };
 
-  if (loading) return (
+ if (loading) return (
   <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0f0f" }}>
-    <ServiceRecommendPopup user={popupUser || {}} />  {/* ← ADD */}
     <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#C0202A" }} />
   </div>
 );
@@ -176,7 +176,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen mt-20" style={{ background: "#0f0f0f" }}>
- 
+   <StablePopup />  
       <style>{`@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}} @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(192,32,42,0.7)}70%{box-shadow:0 0 0 16px rgba(192,32,42,0)}100%{box-shadow:0 0 0 0 rgba(192,32,42,0)}}`}</style>
 
       {/* Toast */}
