@@ -8,6 +8,7 @@ import {
   ArrowLeft, MapPin, Clock, CheckCircle, Truck, Phone,
   MessageCircle, Star, Navigation, Wifi, WifiOff, User
 } from "lucide-react";
+import { getWsUrl } from "@/lib/ws";
 
 // ─── Leaflet Map (SSR-safe) ─────────────────────────────────
 const TrackingMap = dynamic(() => import("@/components/tracking/TrackingMap"), { ssr: false });
@@ -49,7 +50,7 @@ export default function UserTracking() {
   useEffect(() => {
     if (!bookingId) return;
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:5000/api/user/bookings/${bookingId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/bookings/${bookingId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -59,7 +60,7 @@ export default function UserTracking() {
 
   // WebSocket connection
   const connectWS = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:5000";
+    const wsUrl = getWsUrl();
     const ws = new WebSocket(`${wsUrl}/tracking?bookingId=${bookingId}&role=user`);
     wsRef.current = ws;
 

@@ -11,11 +11,11 @@ import AdminTrackingPanel, { FullTrackModal } from "@/components/admin/AdminTrac
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
-  pending:    "bg-yellow-900/40 text-yellow-300 border-yellow-700",
-  approved:   "bg-blue-900/40 text-blue-300 border-blue-700",
-  completed:  "bg-green-900/40 text-green-300 border-green-700",
-  cancelled:  "bg-zinc-700/50 text-zinc-400 border-zinc-600",
-  rejected:   "bg-red-900/40 text-red-400 border-red-700",
+  Pending:    "bg-yellow-900/40 text-yellow-300 border-yellow-700",
+  Approved:   "bg-blue-900/40 text-blue-300 border-blue-700",
+  Completed:  "bg-green-900/40 text-green-300 border-green-700",
+  Cancelled:  "bg-zinc-700/50 text-zinc-400 border-zinc-600",
+  Rejected:   "bg-red-900/40 text-red-400 border-red-700",
 };
 
 const PAYOUT_STYLES = {
@@ -46,7 +46,7 @@ function StatCard({ label, value, sub, icon: Icon, color }) {
 
 // ─── Payout Badge ─────────────────────────────────────────────────────────────
 function PayoutBadge({ booking }) {
-  const price    = parseFloat(booking.service_price ?? 0);
+  const price = parseFloat(booking.final_amount || booking.quote_amount || booking.service_price || 0);
   const pct      = parseFloat(booking.commission_pct ?? 15);
   const payout   = parseFloat(booking.vendor_payout ?? price * (1 - pct / 100));
   const commission = price - payout;
@@ -306,7 +306,7 @@ export default function AdminBookingsSection() {
   const [vendors, setVendors]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [selected, setSelected]   = useState(null);
-  const [trackingBooking, setTrackingBooking] = useState(null);
+  // const [trackingBooking, setTrackingBooking] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -341,11 +341,11 @@ export default function AdminBookingsSection() {
     loadAll();
   };
   // todayBookings compute karo (bookings state ke baad)
-const todayStr = new Date().toISOString().split("T")[0];
-const todayBookings = bookings.filter((b) => {
-  const bDate = (b.new_date || b.date || "").slice(0, 10);
-  return bDate === todayStr && ["approved", "en_route", "arrived", "in_service"].includes(b.status);
-});
+// const todayStr = new Date().toISOString().split("T")[0];
+// const todayBookings = bookings.filter((b) => {
+//   const bDate = (b.new_date || b.date || "").slice(0, 10);
+//   return bDate === todayStr && ["approved", "en_route", "arrived", "in_service"].includes(b.status);
+// });
 
   const clearFilters = () =>
     setFilters({ search: "", status: "", vendorId: "", paymentMethod: "", dateFrom: "", dateTo: "" });
@@ -355,7 +355,7 @@ const todayBookings = bookings.filter((b) => {
   return (
     <div className="space-y-5">
       {/* ── Aaj Ki Active Bookings Alert ── */}
-{todayBookings.length > 0 && (
+{/* {todayBookings.length > 0 && (
   <div className="space-y-2">
     <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
       <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
@@ -391,7 +391,7 @@ const todayBookings = bookings.filter((b) => {
       </div>
     ))}
   </div>
-)}
+)} */}
 
       {/* ── Stats Row ── */}
       {stats && (
@@ -570,7 +570,7 @@ const todayBookings = bookings.filter((b) => {
                     {/* Payout */}
                     <td className="px-4 py-3 min-w-[140px]">
                       <PayoutBadge booking={b} />
-                      {b.service_price && (
+                      {(b.final_amount || b.quote_amount || b.service_price) && (
                         <span className={`mt-1 inline-block text-xs font-semibold px-1.5 py-0.5 rounded-full ${PAYOUT_STYLES[b.payout_status] ?? "bg-zinc-800 text-zinc-400"}`}>
                           {b.payout_status === "paid" ? "✓ Paid" : "⏳ Pending"}
                         </span>
@@ -609,7 +609,7 @@ const todayBookings = bookings.filter((b) => {
                         )}
 
                         {/* Quick: Mark Payout Paid */}
-                        {b.service_price && b.payout_status === "pending" && b.status === "completed" && (
+                        {(b.final_amount || b.quote_amount || b.service_price) && b.payout_status === "pending" && b.status === "completed" && (
                           <button
                             onClick={() => quickAction(b.id, { payout_status: "paid" })}
                             className="flex items-center gap-1 px-2.5 py-1 bg-purple-700 text-white rounded-md text-xs font-semibold hover:bg-purple-600 transition-colors"
@@ -637,12 +637,12 @@ const todayBookings = bookings.filter((b) => {
         />
       )}
       {/* Tracking Modal */}
-{trackingBooking && (
+{/* {trackingBooking && (
   <FullTrackModal
     booking={trackingBooking}
     onClose={() => setTrackingBooking(null)}
   />
-)}
+)} */}
     </div>
   );
 }

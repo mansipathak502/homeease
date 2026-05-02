@@ -7,6 +7,7 @@ router.use(verifyToken, isUser);
 
 router.get('/profile',  userController.getProfile);
 router.put('/profile',  userController.updateProfile);
+router.post('/bookings/:id/quote-response', userController.respondToQuote);
 
 router.get('/bookings',               userController.getBookings);
 router.post('/bookings',              userController.createBooking);

@@ -408,3 +408,65 @@ exports.addReview = async (req, res) => {
     res.status(201).json({ success: true, message: 'Review added' });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Server error' }); }
 };
+
+exports.respondToQuote = async (req, res) => {
+  try {
+    const userId    = req.user.id;
+    const bookingId = req.params.id;
+    const { action } = req.body; // 'accept' | 'reject'
+ 
+    if (!['accept', 'reject'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Action must be accept or reject' });
+    }
+ 
+    // Ownership check
+    const { rows } = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, userId]
+    );
+    if (!rows.length) {
+      return res.status(403).json({ success: false, message: 'Booking not found' });
+    }
+ 
+    const booking = rows[0];
+ 
+    if (booking.quote_status !== 'pending_user') {
+      return res.status(400).json({ success: false, message: 'No pending quote for this booking' });
+    }
+ 
+    if (action === 'accept') {
+      // Set final_amount = quote_amount (this is the locked-in total price)
+      // commission_pct and splits will be recalculated when vendor records final payment
+      await pool.query(
+        `UPDATE bookings SET
+           quote_status  = 'accepted',
+           final_amount  = quote_amount,
+           updated_at    = NOW()
+         WHERE id = $1`,
+        [bookingId]
+      );
+ 
+      return res.json({
+        success: true,
+        message: 'Quote accepted',
+        amount: booking.quote_amount,
+      });
+    }
+ 
+    if (action === 'reject') {
+      await pool.query(
+        `UPDATE bookings SET
+           quote_status = 'rejected',
+           status       = 'cancelled',
+           updated_at   = NOW()
+         WHERE id = $1`,
+        [bookingId]
+      );
+ 
+      return res.json({ success: true, message: 'Quote rejected, booking cancelled' });
+    }
+  } catch (error) {
+    console.error('respondToQuote error:', error);
+    res.status(500).json({ success: false, message: 'Failed to respond to quote' });
+  }
+};

@@ -67,6 +67,45 @@ export default function AdminReviewsSection() {
 
   const [form, setForm] = useState({ name: "", email: "", rating: 5, text: "", service: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [editModal, setEditModal] = useState(null); // { review object }
+const [editForm, setEditForm] = useState({ rating: 5, text: "", name: "", service: "" });
+const [editLoading, setEditLoading] = useState(false);
+
+// Handler add karo
+const handleEdit = (review) => {
+  setEditForm({
+    rating: review.rating,
+    text: review.text,
+    name: review.name,
+    service: review.service || "",
+  });
+  setEditModal(review);
+};
+
+const handleEditSave = async () => {
+  if (!editForm.text.trim() || !editForm.name.trim()) {
+    showToast("Name and review text are required.", "error");
+    return;
+  }
+  setEditLoading(true);
+  try {
+    const res = await api.admin.reviews.update(editModal.id, editForm);
+    if (res.success) {
+      showToast("Review updated!");
+      setEditModal(null);
+      // Update locally without refetch
+      setReviews(prev => prev.map(r =>
+        r.id === editModal.id
+          ? { ...r, ...editForm, comment: editForm.text }
+          : r
+      ));
+    } else showToast(res.message || "Failed", "error");
+  } catch {
+    showToast("Failed to update", "error");
+  } finally {
+    setEditLoading(false);
+  }
+};
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -335,6 +374,15 @@ export default function AdminReviewsSection() {
 
                   {/* Actions */}
                   <div className="flex gap-2 flex-shrink-0">
+                    <button
+    onClick={() => handleEdit(review)}
+    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-colors"
+    style={{ backgroundColor: "#1a1a2e", color: "#818cf8", border: "1px solid #2a2a4a" }}
+    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#818cf820")}
+    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a1a2e")}
+  >
+    <Star className="w-3.5 h-3.5" /> Edit
+  </button>
                     {!review.is_approved && (
                       <button
                         onClick={() => handleApprove(review.id)}
@@ -506,6 +554,79 @@ export default function AdminReviewsSection() {
           </div>
         </div>
       )}
+      {/* Edit Review Modal */}
+{editModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+    <div className="w-full max-w-md rounded-lg" style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a" }}>
+      
+      <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid #2a2a2a" }}>
+        <h3 className="text-base font-bold" style={{ color: "#f0f0f0" }}>Edit Review</h3>
+        <button onClick={() => setEditModal(null)} className="p-1 rounded hover:bg-white/5">
+          <X className="w-5 h-5" style={{ color: "#999" }} />
+        </button>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* Name */}
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: "#999" }}>Customer Name</label>
+          <input type="text" value={editForm.name}
+            onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+            className="w-full px-3 py-2 text-sm rounded outline-none"
+            style={{ backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#f0f0f0" }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#CC0000")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2a2a2a")} />
+        </div>
+
+        {/* Service */}
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: "#999" }}>Service</label>
+          <select value={editForm.service}
+            onChange={(e) => setEditForm(f => ({ ...f, service: e.target.value }))}
+            className="w-full px-3 py-2 text-sm rounded outline-none"
+            style={{ backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#f0f0f0" }}>
+            <option value="">Select service...</option>
+            {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        {/* Rating */}
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: "#999" }}>
+            Rating — currently: {editForm.rating} ★
+          </label>
+          <StarPicker value={editForm.rating} onChange={(v) => setEditForm(f => ({ ...f, rating: v }))} />
+        </div>
+
+        {/* Text */}
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: "#999" }}>Review Text</label>
+          <textarea value={editForm.text} rows={3}
+            onChange={(e) => setEditForm(f => ({ ...f, text: e.target.value }))}
+            className="w-full px-3 py-2 text-sm rounded outline-none resize-none"
+            style={{ backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#f0f0f0" }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#CC0000")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#2a2a2a")} />
+        </div>
+      </div>
+
+      <div className="flex gap-3 p-5" style={{ borderTop: "1px solid #2a2a2a" }}>
+        <button onClick={() => setEditModal(null)}
+          className="flex-1 py-2 text-sm font-semibold rounded"
+          style={{ backgroundColor: "#2a2a2a", color: "#999" }}>
+          Cancel
+        </button>
+        <button onClick={handleEditSave} disabled={editLoading}
+          className="flex-1 py-2 text-sm font-semibold rounded disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ backgroundColor: "#CC0000", color: "#fff" }}>
+          {editLoading
+            ? <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#fff", borderTopColor: "transparent" }} />
+            : "Save Changes"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

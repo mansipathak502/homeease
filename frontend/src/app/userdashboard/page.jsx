@@ -76,20 +76,12 @@ export default function UserDashboard() {
   const [quoteModal, setQuoteModal] = useState({ open: false, booking: null });
   const [quoteAction, setQuoteAction] = useState(null); // 'accept' | 'reject'
 
-  const showToast = (msg, type = "success") => {
+   const showToast = (msg, type = "success") => {
     setToast({ show: true, msg, type });
     setTimeout(() => setToast({ show: false, msg: "", type: "success" }), 3500);
   };
 
-  useEffect(() => {
-    if (localStorage.getItem("userType") !== "user") { router.push("/login"); return; }
-    fetchData();
-    // Poll for quote updates every 15s
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchData = async () => {
+   const fetchData = async () => {
     try {
       setLoading(true);
       const [vd, bd, fd, pd] = await Promise.all([
@@ -106,7 +98,25 @@ export default function UserDashboard() {
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
+    useEffect(() => {
+    if (localStorage.getItem("userType") !== "user") { router.push("/login"); return; }
+    fetchData();
+    // Poll for quote updates every 15s
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
+  //   if (loading) return (
+  //   <div className="min-h-screen flex items-center justify-center" 
+  //     style={{ background: "#0f0f0f" }}>
+  //     <ServiceRecommendPopup key="popup" user={
+  //       (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })()
+  //     } />
+  //     <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#C0202A" }} />
+  //   </div>
+  // );
+
+ 
   // Bookings with pending quotes
   const pendingQuotes = bookings.filter(b => b.quote_status === "pending_user");
 
@@ -125,8 +135,7 @@ export default function UserDashboard() {
     try {
       setActionLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/user/bookings/${cancelModal.booking.id}/cancel`, {
-        method: "PUT",
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/bookings/${cancelModal.booking.id}/cancel`, {        method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ reason: cancelReason }),
       });
@@ -144,7 +153,7 @@ export default function UserDashboard() {
     try {
       setActionLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/user/bookings/${bookingId}/quote-response`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/bookings/${bookingId}/quote-response`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action }),
@@ -163,12 +172,14 @@ export default function UserDashboard() {
 
   const handleLogout = () => { localStorage.clear(); router.push("/login"); };
 
- if (loading) return (
+if (loading) return (
   <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0f0f" }}>
+    <ServiceRecommendPopup key="popup" user={
+      (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })()
+    } />
     <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#C0202A" }} />
   </div>
 );
-
 
 
 
@@ -176,7 +187,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen mt-20" style={{ background: "#0f0f0f" }}>
-   <StablePopup />  
+<ServiceRecommendPopup key="popup" user={popupUser || {}} />
       <style>{`@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}} @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(192,32,42,0.7)}70%{box-shadow:0 0 0 16px rgba(192,32,42,0)}100%{box-shadow:0 0 0 0 rgba(192,32,42,0)}}`}</style>
 
       {/* Toast */}
@@ -347,24 +358,34 @@ export default function UserDashboard() {
                           </div>
 
                           {/* Quote info on card */}
-                          {b.quote_status === "pending_user" && b.quote_amount && (
-                            <div style={{ marginTop: 8, padding: "8px 12px", background: "#1a0808", border: "1px solid #5A1A18", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <div>
-                                <p style={{ fontSize: 10, color: "#F1948A", fontWeight: 700, margin: 0 }}>VENDOR QUOTE</p>
-                                <p style={{ fontSize: 18, fontWeight: 900, color: "#fff", margin: 0 }}>₹{Number(b.quote_amount).toLocaleString("en-IN")}</p>
-                              </div>
-                              <div style={{ display: "flex", gap: 6 }}>
-                                <button onClick={() => { setQuoteModal({ open: true, booking: b }); setQuoteAction("accept"); }}
-                                  style={{ padding: "6px 12px", borderRadius: 8, background: "#059669", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-                                  ✅ Accept
-                                </button>
-                                <button onClick={() => { setQuoteModal({ open: true, booking: b }); setQuoteAction("reject"); }}
-                                  style={{ padding: "6px 12px", borderRadius: 8, background: "#C0202A", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
-                                  ❌ Reject
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                       {b.quote_status === "pending_user" && b.quote_amount && (() => {
+  const quoteAmt   = Number(b.quote_amount);
+  const advanceAmt = Number(b.advance_amount || 99);
+  const remaining  = Math.max(0, quoteAmt - advanceAmt);
+  return (
+    <div style={{ marginTop:8, padding:"10px 12px", background:"#1a0808", border:"1px solid #5A1A18", borderRadius:8 }}>
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:8 }}>
+        <div>
+          <p style={{ fontSize:10, color:"#F1948A", fontWeight:700, margin:0, letterSpacing:"0.06em" }}>VENDOR QUOTE</p>
+          <p style={{ fontSize:22, fontWeight:900, color:"#fff", margin:0 }}>₹{quoteAmt.toLocaleString("en-IN")}</p>
+          <p style={{ fontSize:10, color:"#888", margin:"2px 0 0" }}>
+            ₹{advanceAmt.toLocaleString("en-IN")} paid · ₹{remaining.toLocaleString("en-IN")} on service day
+          </p>
+        </div>
+        <div style={{ display:"flex", gap:6 }}>
+          <button onClick={() => { setQuoteModal({ open:true, booking:b }); setQuoteAction("accept"); }}
+            style={{ padding:"7px 12px", borderRadius:8, background:"#059669", color:"#fff", border:"none", cursor:"pointer", fontSize:12, fontWeight:700 }}>
+            ✅ Accept
+          </button>
+          <button onClick={() => { setQuoteModal({ open:true, booking:b }); setQuoteAction("reject"); }}
+            style={{ padding:"7px 12px", borderRadius:8, background:"#C0202A", color:"#fff", border:"none", cursor:"pointer", fontSize:12, fontWeight:700 }}>
+            ❌ Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+})()}
 
                           {b.quote_status === "accepted" && (
                             <p style={{ marginTop: 6, fontSize: 12, color: "#4ADE80", fontWeight: 700 }}>
@@ -495,59 +516,91 @@ export default function UserDashboard() {
 
       {/* ══ QUOTE CONFIRM MODAL ════════════════════════════════ */}
       {quoteModal.open && quoteModal.booking && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-[70]"
-          style={{ background: "rgba(0,0,0,0.92)" }}>
-          <div className="rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
-            style={{ background: "#1a1a1a", border: `2px solid ${quoteAction === "accept" ? "#059669" : "#C0202A"}` }}>
-            <div className="px-6 pt-6 pb-4" style={{ background: "#141414" }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-                style={{ background: quoteAction === "accept" ? "rgba(5,150,105,0.15)" : "rgba(192,32,42,0.15)" }}>
-                {quoteAction === "accept"
-                  ? <CheckCircle className="w-6 h-6" style={{ color: "#059669" }} />
-                  : <XCircle className="w-6 h-6" style={{ color: "#C0202A" }} />}
-              </div>
-              <h3 className="font-bold text-lg" style={{ color: "#f0f0f0" }}>
-                {quoteAction === "accept" ? "Accept Price Quote?" : "Reject Price Quote?"}
-              </h3>
-              <p className="text-sm mt-1" style={{ color: "#888" }}>
-                {quoteAction === "accept"
-                  ? `You agree to pay ₹${Number(quoteModal.booking.quote_amount).toLocaleString("en-IN")} for this service.`
-                  : "The booking will be cancelled and the vendor will be informed."}
-              </p>
-            </div>
-            <div className="px-6 py-5">
-              {quoteAction === "accept" && (
-                <div style={{ background: "#0D1F0D", border: "1px solid #1A3A1A", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: "#4ADE80" }}>Service charge</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>₹{Number(quoteModal.booking.quote_amount).toLocaleString("en-IN")}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: "#4ADE80" }}>Advance paid</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#4ADE80" }}>- ₹{Number(quoteModal.booking.advance_amount || 99).toLocaleString("en-IN")}</span>
-                  </div>
-                  <div style={{ borderTop: "1px solid #1A3A1A", paddingTop: 6, display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 12, color: "#aaa" }}>Remaining to pay</span>
-                    <span style={{ fontSize: 15, fontWeight: 900, color: "#fff" }}>
-                      ₹{Math.max(0, Number(quoteModal.booking.quote_amount) - Number(quoteModal.booking.advance_amount || 99)).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setQuoteModal({ open: false, booking: null })}
-                  style={{ flex: 1, padding: 12, borderRadius: 10, border: "1px solid #3a3a3a", background: "transparent", color: "#aaa", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
-                  Back
-                </button>
-                <button onClick={() => handleQuoteResponse(quoteModal.booking.id, quoteAction)} disabled={actionLoading}
-                  style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", background: quoteAction === "accept" ? "#059669" : "#C0202A", color: "#fff", cursor: "pointer", fontWeight: 800, fontSize: 13, opacity: actionLoading ? 0.5 : 1 }}>
-                  {actionLoading ? "Please wait..." : quoteAction === "accept" ? "✅ Confirm Accept" : "❌ Confirm Reject"}
-                </button>
-              </div>
-            </div>
-          </div>
+  <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-[70]"
+    style={{ background: "rgba(0,0,0,0.92)" }}>
+    <div className="rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
+      style={{ background: "#1a1a1a", border: `2px solid ${quoteAction === "accept" ? "#059669" : "#C0202A"}` }}>
+      <div className="px-6 pt-6 pb-4" style={{ background: "#141414" }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+          style={{ background: quoteAction === "accept" ? "rgba(5,150,105,0.15)" : "rgba(192,32,42,0.15)" }}>
+          {quoteAction === "accept"
+            ? <CheckCircle className="w-6 h-6" style={{ color: "#059669" }} />
+            : <XCircle    className="w-6 h-6" style={{ color: "#C0202A" }} />}
         </div>
-      )}
+        <h3 className="font-bold text-lg" style={{ color: "#f0f0f0" }}>
+          {quoteAction === "accept" ? "Accept Price Quote?" : "Reject Price Quote?"}
+        </h3>
+        <p className="text-sm mt-1" style={{ color: "#888" }}>
+          {quoteAction === "accept"
+            ? `You agree to the total price of ₹${Number(quoteModal.booking.quote_amount).toLocaleString("en-IN")}.`
+            : "The booking will be cancelled and the vendor will be informed."}
+        </p>
+      </div>
+ 
+      <div className="px-6 py-5">
+        {quoteAction === "accept" && (() => {
+          // ✅ FIXED CALCULATION
+          // quote_amount = total price vendor wants for the job
+          // advance_amount = ₹99 already paid at booking time (part of the total)
+          // remaining = what customer still owes (paid directly to vendor on service day)
+          const quoteAmt   = Number(quoteModal.booking.quote_amount);
+          const advanceAmt = Number(quoteModal.booking.advance_amount || 99);
+          const remaining  = Math.max(0, quoteAmt - advanceAmt);
+ 
+          return (
+            <div style={{ background: "#0D1F0D", border: "1px solid #1A3A1A", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+              <p style={{ fontSize:11, color:"#4ADE80", fontWeight:800, letterSpacing:"0.06em", marginBottom:8 }}>
+                PRICE SUMMARY
+              </p>
+ 
+              {/* Advance already paid */}
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                <span style={{ fontSize:12, color:"#aaa" }}>Booking fee (already paid)</span>
+                <span style={{ fontSize:13, fontWeight:700, color:"#4ADE80" }}>
+                  ₹{advanceAmt.toLocaleString("en-IN")} ✓
+                </span>
+              </div>
+ 
+              {/* Remaining to pay */}
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <span style={{ fontSize:12, color:"#aaa" }}>Pay on service day</span>
+                <span style={{ fontSize:13, fontWeight:700, color:"#F97316" }}>
+                  ₹{remaining.toLocaleString("en-IN")}
+                </span>
+              </div>
+ 
+              {/* Divider */}
+              <div style={{ borderTop:"1px solid #1A3A1A", paddingTop:8 }}>
+                <div style={{ display:"flex", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:12, fontWeight:700, color:"#fff" }}>Total price</span>
+                  <span style={{ fontSize:16, fontWeight:900, color:"#fff" }}>
+                    ₹{quoteAmt.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <p style={{ fontSize:10, color:"#555", marginTop:4 }}>
+                  = ₹{advanceAmt.toLocaleString("en-IN")} already paid + ₹{remaining.toLocaleString("en-IN")} on service day
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+ 
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => setQuoteModal({ open: false, booking: null })}
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: "1px solid #3a3a3a", background: "transparent", color: "#aaa", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
+            Back
+          </button>
+          <button onClick={() => handleQuoteResponse(quoteModal.booking.id, quoteAction)} disabled={actionLoading}
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", background: quoteAction === "accept" ? "#059669" : "#C0202A", color: "#fff", cursor: "pointer", fontWeight: 800, fontSize: 13, opacity: actionLoading ? 0.5 : 1 }}>
+            {actionLoading ? "Please wait..."
+              : quoteAction === "accept" ? "✅ Confirm Accept"
+              : "❌ Confirm Reject"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Cancel Modal */}
       {cancelModal.open && (
@@ -582,6 +635,135 @@ export default function UserDashboard() {
           </div>
         </div>
       )}
+      {/* ── BOOKING DETAIL MODAL ── */}
+{selectedBooking && (
+  <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+    style={{ background: "rgba(0,0,0,0.92)" }}>
+    <div className="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+      style={{ background: "#1a1a1a", border: "1px solid #2e2e2e" }}>
+
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-6 py-4 flex justify-between items-center rounded-t-2xl"
+        style={{ background: "#141414", borderBottom: "1px solid #2a2a2a" }}>
+        <div>
+          <h3 className="font-bold text-white">{selectedBooking.service_name || "Booking Details"}</h3>
+          <p className="text-xs mt-0.5" style={{ color: "#555" }}>#{selectedBooking.id}</p>
+        </div>
+        <button onClick={() => setSelectedBooking(null)}
+          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+          <X className="w-5 h-5" style={{ color: "#555" }} />
+        </button>
+      </div>
+
+      <div className="p-6 space-y-4">
+
+        {/* Status row */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <StatusBadge status={selectedBooking.status} />
+          {selectedBooking.quote_status === "accepted" && (
+            <span className="text-xs font-bold" style={{ color: "#4ADE80" }}>✅ Quote Accepted</span>
+          )}
+          {selectedBooking.quote_status === "rejected" && (
+            <span className="text-xs font-bold" style={{ color: "#F1948A" }}>❌ Quote Rejected</span>
+          )}
+          {selectedBooking.quote_status === "pending_user" && (
+            <span className="text-xs font-bold" style={{ color: "#FCD34D", background: "#2D1800", padding: "2px 8px", borderRadius: 999 }}>💰 QUOTE PENDING</span>
+          )}
+        </div>
+
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            ["Vendor",     selectedBooking.vendor_name   || "—"],
+            ["Service",    selectedBooking.service_name  || "—"],
+            ["Date",       formatDate(selectedBooking.new_date || selectedBooking.date)],
+            ["Time",       selectedBooking.new_time || selectedBooking.time || "—"],
+            ["Payment",    selectedBooking.payment_method || "—"],
+            ["Booking ID", `#${selectedBooking.id}`],
+          ].map(([label, val]) => (
+            <div key={label} className="rounded-xl p-3" style={{ background: "#111", border: "1px solid #222" }}>
+              <p className="text-xs mb-0.5" style={{ color: "#555" }}>{label}</p>
+              <p className="text-xs font-semibold text-white capitalize">{val}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Amount Breakdown */}
+        {(selectedBooking.final_amount || selectedBooking.quote_amount || selectedBooking.advance_amount) && (
+          <div className="rounded-xl p-4 space-y-2" style={{ background: "#0D1F0D", border: "1px solid #1A3A1A" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#4ADE80" }}>Payment Breakdown</p>
+            {selectedBooking.advance_amount && (
+              <div className="flex justify-between text-xs">
+                <span style={{ color: "#888" }}>Booking Fee (Paid)</span>
+                <span className="font-bold" style={{ color: "#4ADE80" }}>₹{Number(selectedBooking.advance_amount).toLocaleString("en-IN")} ✓</span>
+              </div>
+            )}
+            {(selectedBooking.final_amount || selectedBooking.quote_amount) && (
+              <div className="flex justify-between text-xs">
+                <span style={{ color: "#888" }}>Total Amount</span>
+                <span className="font-bold text-white">₹{Number(selectedBooking.final_amount || selectedBooking.quote_amount).toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {selectedBooking.advance_amount && (selectedBooking.final_amount || selectedBooking.quote_amount) && (
+              <div className="flex justify-between text-xs pt-2" style={{ borderTop: "1px solid #1A3A1A" }}>
+                <span style={{ color: "#888" }}>Remaining (Pay on service day)</span>
+                <span className="font-bold" style={{ color: "#F97316" }}>
+                  ₹{Math.max(0, Number(selectedBooking.final_amount || selectedBooking.quote_amount) - Number(selectedBooking.advance_amount)).toLocaleString("en-IN")}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Vendor message */}
+        {selectedBooking.vendor_response && (
+          <div className="rounded-xl px-4 py-3 text-xs" style={{ background: "#001a2e", border: "1px solid #003a6e", color: "#4da6ff" }}>
+            <p className="font-bold mb-1">Vendor Message</p>
+            <p>{selectedBooking.vendor_response}</p>
+          </div>
+        )}
+
+        {/* Rescheduled info */}
+        {selectedBooking.new_date && (
+          <div className="rounded-xl px-4 py-3 text-xs" style={{ background: "#1a0a2e", border: "1px solid #3a1a5e", color: "#b388ff" }}>
+            📅 Rescheduled to <span className="font-bold">{selectedBooking.new_date} at {selectedBooking.new_time}</span>
+          </div>
+        )}
+
+        {/* Quote accept/reject (if still pending) */}
+        {selectedBooking.quote_status === "pending_user" && selectedBooking.quote_amount && (
+          <div className="flex gap-2">
+            <button onClick={() => { setQuoteModal({ open: true, booking: selectedBooking }); setQuoteAction("accept"); setSelectedBooking(null); }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white hover:opacity-90 transition-all"
+              style={{ background: "#059669" }}>
+              ✅ Accept Quote
+            </button>
+            <button onClick={() => { setQuoteModal({ open: true, booking: selectedBooking }); setQuoteAction("reject"); setSelectedBooking(null); }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white hover:opacity-90 transition-all"
+              style={{ background: "#C0202A" }}>
+              ❌ Reject Quote
+            </button>
+          </div>
+        )}
+
+        {/* Cancel button */}
+        {["pending_visit","pending","approved"].includes(selectedBooking.status) && !selectedBooking.quote_status && (
+          <button onClick={() => { handleCancelOpen(selectedBooking); setSelectedBooking(null); }}
+            className="w-full py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all"
+            style={{ background: "rgba(192,32,42,0.12)", color: "#e05060", border: "1px solid rgba(192,32,42,0.3)" }}>
+            <XCircle className="w-4 h-4 inline mr-1.5" /> Cancel Booking
+          </button>
+        )}
+
+        <button onClick={() => setSelectedBooking(null)}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 transition-all"
+          style={{ background: "#111", color: "#555", border: "1px solid #222" }}>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

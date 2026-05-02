@@ -3,10 +3,12 @@
 // Drop this inside your AdminBookingsSection or as a separate tab
 import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { getWsUrl } from "@/lib/ws";
 import {
   Navigation, Users, Truck, CheckCircle, Circle,
   Wifi, WifiOff, MapPin, Clock, Eye, X
 } from "lucide-react";
+
 
 const TrackingMap = dynamic(() => import("@/components/tracking/TrackingMap"), { ssr: false });
 
@@ -36,7 +38,7 @@ function BookingTracker({ booking }) {
   const wsRef = useRef(null);
 
   const connect = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:5000";
+    const wsUrl = getWsUrl();
     const ws = new WebSocket(`${wsUrl}/tracking?bookingId=${booking.id}&role=admin`);
     wsRef.current = ws;
     ws.onopen = () => setConnected(true);
@@ -98,7 +100,7 @@ function FullTrackModal({ booking, onClose }) {
   const wsRef = useRef(null);
 
   const connect = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:5000";
+    const wsUrl = getWsUrl();
     const ws = new WebSocket(`${wsUrl}/tracking?bookingId=${booking.id}&role=admin`);
     wsRef.current = ws;
     ws.onopen = () => setConnected(true);

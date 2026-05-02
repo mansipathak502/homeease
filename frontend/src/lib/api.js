@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 // Add this at the top of your existing lib/api.js, after the API_URL line:
 
@@ -142,6 +142,14 @@ export const api = {
     const response = await fetch(`${API_URL}/reviews/public`);
     return response.json();
   },
+  update: async (id, data) => {
+  const response = await fetch(`${API_URL}/reviews/admin/${id}`, {
+    method: "PUT",
+    headers: api.getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return response.json();
+},
 },
 
   // Admin endpoints

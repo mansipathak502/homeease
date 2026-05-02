@@ -3,7 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { Building2, User, Phone, MapPin, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ;
 
 const CITIES = [
   "Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Chennai",
@@ -64,11 +64,12 @@ const inputStyle = {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function SocietyPartnerPage() {
-  const [form, setForm] = useState({ name: "", society_name: "", phone: "", city: "" });
+  const [form, setForm] = useState({ name: "", society_name: "", phone: "", city: "", state: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ type: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -79,7 +80,8 @@ export default function SocietyPartnerPage() {
     const e = {};
     if (!form.name.trim())         e.name         = "Name is required.";
     if (!form.society_name.trim()) e.society_name = "Society name is required.";
-    if (!form.city)                e.city         = "Please select your city.";
+   if (!form.city.trim())  e.city  = "City is required.";
+if (!form.state.trim()) e.state = "State is required.";
     if (!form.phone.trim())        e.phone        = "Phone number is required.";
     else if (!/^[6-9]\d{9}$/.test(form.phone.trim()))
                                    e.phone        = "Enter a valid 10-digit mobile number.";
@@ -99,7 +101,7 @@ export default function SocietyPartnerPage() {
 
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/api/society-leads`, form);
+      await axios.post(`${API_BASE}/society-leads`, form);
       setSubmitted(true);
       showToast("success", "Enquiry submitted! We'll contact you within 24 hours.");
     } catch (err) {
@@ -193,7 +195,7 @@ export default function SocietyPartnerPage() {
                   Thank you for your interest. Our partnership team will call you within 24 hours.
                 </p>
                 <button
-                  onClick={() => { setSubmitted(false); setForm({ name: "", society_name: "", phone: "", city: "" }); }}
+                  onClick={() => { setSubmitted(false); setForm({ name: "", society_name: "", phone: "", city: "", state: "" }); }}
                   className="mt-6 px-4 py-2 rounded-lg text-sm font-semibold"
                   style={{ backgroundColor: "#2a2a2a", color: "#cccccc" }}
                 >
@@ -244,20 +246,27 @@ export default function SocietyPartnerPage() {
                   </Field>
 
                   <Field label="City" icon={MapPin} error={errors.city}>
-                    <select
-                      name="city"
-                      value={form.city}
-                      onChange={handleChange}
-                      style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}
-                      onFocus={(e) => (e.target.style.borderColor = "#CC0000")}
-                      onBlur={(e) => (e.target.style.borderColor = "#2a2a2a")}
-                    >
-                      <option value="" disabled>Select your city</option>
-                      {CITIES.map((c) => (
-                        <option key={c} value={c} style={{ backgroundColor: "#1a1a1a" }}>{c}</option>
-                      ))}
-                    </select>
-                  </Field>
+  <input
+    name="city"
+    value={form.city}
+    onChange={handleChange}
+    placeholder="e.g. Delhi"
+    style={inputStyle}
+    onFocus={(e) => (e.target.style.borderColor = "#CC0000")}
+    onBlur={(e) => (e.target.style.borderColor = "#2a2a2a")}
+  />
+</Field>
+<Field label="State" icon={MapPin} error={errors.state}>
+  <input
+    name="state"
+    value={form.state}
+    onChange={handleChange}
+    placeholder="e.g. Uttar Pradesh"
+    style={inputStyle}
+    onFocus={(e) => (e.target.style.borderColor = "#CC0000")}
+    onBlur={(e) => (e.target.style.borderColor = "#2a2a2a")}
+  />
+</Field>
 
                   <button
                     type="submit"

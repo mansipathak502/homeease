@@ -8,6 +8,7 @@ import {
   CheckCircle, Clock, Users, Phone, Wifi, WifiOff,
   AlertCircle, Truck, Star
 } from "lucide-react";
+import { getWsUrl } from "@/lib/ws";
 
 const TrackingMap = dynamic(() => import("@/components/tracking/TrackingMap"), { ssr: false });
 
@@ -38,7 +39,7 @@ export default function VendorTracking() {
   useEffect(() => {
     if (!bookingId) return;
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:5000/api/vendor/bookings/${bookingId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/bookings/${bookingId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -48,7 +49,7 @@ export default function VendorTracking() {
 
   // WebSocket
   const connectWS = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:5000";
+    const wsUrl = getWsUrl();
     const ws = new WebSocket(`${wsUrl}/tracking?bookingId=${bookingId}&role=vendor`);
     wsRef.current = ws;
     ws.onopen = () => setConnected(true);
@@ -98,7 +99,7 @@ export default function VendorTracking() {
 
     // Also update DB
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:5000/api/vendor/bookings/${bookingId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/bookings/${bookingId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status: status === "completed" ? "completed" : "approved", tracking_status: status }),

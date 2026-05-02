@@ -207,7 +207,7 @@ export default function LoginPage() {
                       style={{ width: "13px", height: "13px", opacity: 0.35 }} />
                     <input
                       className="lg-input"
-                      id="email" name="email" type="email"
+                      id="email" name="email" type="number%0"
                       required value={formData.email}
                       onChange={handleChange}
                       placeholder="you@example.com"

@@ -74,7 +74,7 @@ export default function BookService() {
     setLoading(true); setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/user/bookings", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -112,7 +112,7 @@ export default function BookService() {
       const token = localStorage.getItem("token");
 
       // 1. Order create karo
-      const orderRes = await fetch("http://localhost:5000/api/payment/create-order", {
+      const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       });
@@ -129,7 +129,7 @@ export default function BookService() {
         order_id: orderData.orderId,
         handler: async (response) => {
           // 3. Verify + save booking
-          const verifyRes = await fetch("http://localhost:5000/api/payment/verify", {
+          const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({

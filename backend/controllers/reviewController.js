@@ -138,3 +138,35 @@ exports.addReviewByAdmin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// ─── ADMIN: Update a review (rating + text) ───────────────────────────────────
+exports.updateReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, text, name, service } = req.body;
+
+    if (rating && (rating < 1 || rating > 5)) {
+      return res.status(400).json({ message: 'Rating must be 1–5.' });
+    }
+
+    const result = await pool.query(
+      `UPDATE reviews 
+       SET rating = COALESCE($1, rating),
+           comment = COALESCE($2, comment),
+           customer_name = COALESCE($3, customer_name),
+           service = COALESCE($4, service)
+       WHERE id = $5 AND vendor_id IS NULL
+       RETURNING id`,
+      [rating || null, text || null, name || null, service || null, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    res.json({ success: true, message: 'Review updated successfully' });
+  } catch (error) {
+    console.error('Error updating review:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

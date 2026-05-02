@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Star, MapPin, IndianRupee, CalendarCheck, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 // ── Service keyword map ──────────────────────────────────────────────────────
 const SERVICE_MAP = [

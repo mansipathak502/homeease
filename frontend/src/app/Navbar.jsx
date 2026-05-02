@@ -291,6 +291,50 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Pre-fill from URL params (agar /services se wapas aaye)
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const loc = params.get("location");
+  const svc = params.get("service");
+  if (loc) setLocation(loc);
+  if (svc) { setService(svc); setServiceQuery(svc); }
+}, []);
+
+
+// Auto-detect location on page load
+useEffect(() => {
+  // localStorage.removeItem("userCity"); // ← uncomment karo ek baar, phir comment back
+  const saved = localStorage.getItem("userCity");
+  if (saved) { setLocation(saved); return; }
+  if (!navigator.geolocation) return;
+  setDetecting(true);
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+        );
+        const data = await res.json();
+        const addr = data.address || {};
+        const city =
+          addr.city ||
+          addr.district ||
+          addr.county ||
+          addr.state_district ||
+          addr.town ||
+          addr.municipality || "";
+        if (city) {
+          setLocation(city);
+          localStorage.setItem("userCity", city);
+        }
+      } catch (_) {}
+      setDetecting(false);
+    },
+    () => setDetecting(false)
+  );
+}, []);
+
   const dashboardPath =
     userType === "admin"
       ? "/admindashboard"
@@ -334,37 +378,49 @@ export default function Navbar() {
     }
   };
 
-  const selectService = (s) => {
-    setService(s);
-    setServiceQuery(s);
-    setShowDropdown(false);
-    setHighlightedIndex(-1);
-  };
+ const selectService = (s) => {
+  setService(s);
+  setServiceQuery(s);
+  setShowDropdown(false);
+  setHighlightedIndex(-1);
+  // Auto search immediately on selection
+  const params = new URLSearchParams();
+  if (location.trim()) params.set("location", location.trim());
+  params.set("service", s.trim());
+  router.push(`/services?${params.toString()}`);
+  setIsOpen(false);
+};
 
-  const detectLocation = () => {
-    if (!navigator.geolocation) return;
-    setDetecting(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-          const data = await res.json();
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.state_district ||
-            "";
-          if (city) setLocation(city);
-        } catch (_) {}
-        setDetecting(false);
-      },
-      () => setDetecting(false)
-    );
-  };
+const detectLocation = () => {
+  if (!navigator.geolocation) return;
+  setDetecting(true);
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+        );
+        const data = await res.json();
+        // ✅ FIXED — same as useEffect
+        const addr = data.address || {};
+        const city =
+          addr.city ||
+          addr.district ||
+          addr.county ||
+          addr.state_district ||
+          addr.town ||
+          addr.municipality || "";
+        if (city) {
+          setLocation(city);
+          localStorage.setItem("userCity", city);
+        }
+      } catch (_) {}
+      setDetecting(false);
+    },
+    () => setDetecting(false)
+  );
+};
 
   const handleRipple = (e) => {
     const btn = ctaBtnRef.current;
@@ -426,7 +482,11 @@ export default function Navbar() {
                     type="text"
                     placeholder="City..."
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    // NAYA — dono jagah (desktop + mobile input)
+onChange={(e) => {
+  setLocation(e.target.value);
+  if (e.target.value.trim()) localStorage.setItem("userCity", e.target.value.trim());
+}}
                     onKeyDown={handleSearchKeyDown}
                     className="nav-search-input w-full pl-9 pr-2 py-2 text-sm bg-transparent"
                     style={{ color: "#f0f0f0", border: "none", outline: "none" }}

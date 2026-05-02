@@ -5,7 +5,7 @@ import { Shield, Star, Zap, Check, Users, Building2, TrendingUp } from "lucide-r
 const PLANS = [
   {
     name: "Essential",
-    price: "₹2,999",
+    price: "₹3,999",
     period: "/month",
     tagline: "Perfect for small societies",
     icon: Shield,
@@ -21,7 +21,7 @@ const PLANS = [
   },
   {
     name: "Comfort",
-    price: "₹4,999",
+    price: "₹5,999",
     period: "/month",
     tagline: "Most popular for mid-size RWAs",
     icon: Star,
@@ -38,7 +38,7 @@ const PLANS = [
   },
   {
     name: "Premium",
-    price: "₹8,999",
+    price: "₹9,999",
     period: "/month",
     tagline: "Enterprise-grade for large complexes",
     icon: Zap,

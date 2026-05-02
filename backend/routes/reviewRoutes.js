@@ -12,6 +12,7 @@ router.get('/public', reviewController.getPublicReviews);
 
 // ─── ADMIN (auth required) ────────────────────────────────────────────────────
 router.get('/admin', verifyToken, isAdmin, reviewController.getAllReviews);
+router.put('/admin/:id', verifyToken, isAdmin, reviewController.updateReview);
 router.patch('/admin/:id/approve', verifyToken, isAdmin, reviewController.approveReview);
 router.delete('/admin/:id', verifyToken, isAdmin, reviewController.deleteReview);
 router.post('/admin', verifyToken, isAdmin, reviewController.addReviewByAdmin);
