@@ -127,6 +127,21 @@ body {
   overflow: hidden;
 }
 
+/* Ye add karo apne globals.css mein: */
+.cursor-dot,
+.cursor-ring {
+  display: none;
+}
+
+@media (pointer: fine) {
+  .cursor-dot {
+    display: block;
+  }
+  .cursor-ring {
+    display: block;
+  }
+}
+
 /* ── Leaflet map fix ─────────────────────────────────────── */
 .leaflet-container { z-index: 10; border-radius: var(--radius-lg); }
 

@@ -6,6 +6,8 @@ export default function CursorEffect() {
     const dot = document.querySelector(".cursor-dot");
     const ring = document.querySelector(".cursor-ring");
 
+     if (window.matchMedia("(pointer: coarse)").matches) return;
+
     let mouseX = 0;
     let mouseY = 0;
     let ringX = 0;
