@@ -249,74 +249,81 @@ function ServiceVendorInner() {
               const reviews = vendor.review_count   || vendor.reviewCount   || 0;
 
               return (
-                <div
-                  key={vendor.id}
-                  className="rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
-                  style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(139,0,0,0.2)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  <div className="h-24 relative" style={{ background: "linear-gradient(to bottom right, #8B0000, #111111)" }}>
-                    <div className="absolute bottom-2 left-3">
-                      <span
-                        className="px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm"
-                        style={{ backgroundColor: "rgba(17,17,17,0.95)", color: "#CC0000" }}
-                      >
-                        {cat}
-                      </span>
-                    </div>
-                  </div>
+  <div
+    key={vendor.id}
+    className="rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1"
+    style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a", boxShadow: "none" }}
+    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(139,0,0,0.15)"; e.currentTarget.style.borderColor = "#8B0000"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "#2a2a2a"; }}
+  >
+    {/* Top accent bar */}
+    <div style={{ height: 4, background: "#8B0000" }} />
 
-                  <div className="p-4">
-                    <h3 className="font-bold mb-1 text-sm leading-tight" style={{ color: "#FFFFFF" }}>{name}</h3>
+    <div className="p-4">
+      {/* Header row */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold"
+            style={{ backgroundColor: "#2a0000", color: "#CC0000" }}>
+            {name.slice(0,2).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm leading-tight" style={{ color: "#FFFFFF" }}>{name}</h3>
+            <p className="text-xs mt-0.5" style={{ color: "#666" }}>{cat}</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: "#001a2a", color: "#60a5fa", border: "1px solid #003a6e", fontSize: 10 }}>
+          <Shield style={{ width: 9, height: 9 }} /> Verified
+        </span>
+      </div>
 
-                    <div className="flex items-center gap-1 mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-3 h-3 ${i < Math.round(rating) ? "fill-yellow-400 text-yellow-400" : ""}`}
-                          style={i >= Math.round(rating) ? { color: "#2a2a2a" } : {}} />
-                      ))}
-                      <span className="text-xs ml-1" style={{ color: "#666666" }}>({reviews})</span>
-                    </div>
+      {/* Stars */}
+      <div className="flex items-center gap-1 mb-3">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} style={{ width: 11, height: 11, fill: i < Math.round(parseFloat(rating)) ? "#f59e0b" : "transparent", color: i < Math.round(parseFloat(rating)) ? "#f59e0b" : "#333" }} />
+        ))}
+        <span className="text-xs ml-1" style={{ color: "#666" }}>({reviews})</span>
+      </div>
 
-                    <p className="text-xs mb-3 line-clamp-2 leading-relaxed" style={{ color: "#999999" }}>
-                      {desc || "Professional service with verified expertise."}
-                    </p>
+      {/* Description */}
+      <p className="text-xs mb-3 line-clamp-2 leading-relaxed" style={{ color: "#888" }}>
+        {desc || "Professional verified service provider with quality assurance."}
+      </p>
 
-                    <div className="space-y-1 mb-3 text-xs" style={{ color: "#666666" }}>
-                      {(vendor.city || vendor.state) && (
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3 h-3" style={{ color: "#CC0000" }} />
-                          {[vendor.city, vendor.state].filter(Boolean).join(", ")}
-                        </div>
-                      )}
-                      {vendor.pricing && (
-                        <div className="flex items-center gap-1 font-medium" style={{ color: "#FFFFFF" }}>
-                          <IndianRupee className="w-3 h-3" style={{ color: "#22c55e" }} />
-                          {vendor.pricing}
-                        </div>
-                      )}
-                    </div>
+      {/* Meta grid */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="rounded-lg p-2" style={{ backgroundColor: "#161616" }}>
+          <p style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Starting price</p>
+          <p className="font-semibold" style={{ fontSize: 13, color: "#22c55e" }}>
+            {vendor.pricing ? `₹ ${vendor.pricing}` : "On request"}
+          </p>
+        </div>
+        {/* <div className="rounded-lg p-2" style={{ backgroundColor: "#161616" }}>
+          <p style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Reviews</p>
+          <p className="font-semibold" style={{ fontSize: 13, color: "#FFFFFF" }}>{reviews} total</p>
+        </div> */}
+        {(vendor.city || vendor.state) && (
+          <div className="col-span-2 rounded-lg p-2 flex items-center gap-1.5" style={{ backgroundColor: "#161616" }}>
+            <MapPin style={{ width: 10, height: 10, color: "#CC0000", flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: "#888" }}>{[vendor.city, vendor.state].filter(Boolean).join(", ")}</span>
+          </div>
+        )}
+      </div>
 
-                    <div className="flex gap-2">
-                      <span
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-full"
-                        style={{ backgroundColor: "#001a2a", color: "#60a5fa" }}
-                      >
-                        <Shield className="w-3 h-3" /> Verified
-                      </span>
-                      <button
-                        onClick={() => bookVendor(vendor)}
-                        className="flex-1 flex items-center justify-center gap-1 text-white py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                        style={{ backgroundColor: "#8B0000" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#CC0000"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#8B0000"; }}
-                      >
-                        <CalendarCheck className="w-3 h-3" /> Book Service
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
+      {/* Book button */}
+      <button
+        onClick={() => bookVendor(vendor)}
+        className="w-full flex items-center justify-center gap-1.5 text-white rounded-lg font-semibold transition-colors"
+        style={{ padding: "9px 0", backgroundColor: "#8B0000", fontSize: 12 }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#CC0000"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#8B0000"; }}
+      >
+        <CalendarCheck style={{ width: 12, height: 12 }} /> Book Service
+      </button>
+    </div>
+  </div>
+);
             })}
           </div>
         )}
